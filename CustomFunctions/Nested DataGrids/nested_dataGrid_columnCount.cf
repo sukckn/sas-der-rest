@@ -1,0 +1,48 @@
+category:
+	Nested DataGrids
+
+Description:
+	nested_dataGrid_columnCount(in_out package datagrid dgHost, varchar(100) ndgCol) returns double;
+
+Code:
+method nested_dataGrid_columnCount(in_out package datagrid dgHost, varchar(100) ndgCol) returns double;
+	dcl package datagrid ndg();
+	dcl double idx cnt dgReturn;
+	dcl varchar(500) dgName topDgName;
+	dcl varchar(2000) dgJsonList[10] buffer;
+	dcl varchar(100) dgNameList[10];
+		
+	/* get top level dg name */
+	topDgName= scan(ndgCol, 1, '.');
+	/* get nesed datagrids */
+	dataGrid_create(ndg, dataGrid_getString(dgHost, topDgName, 1));
+		
+	/* get number of nested levels */
+	cnt= countw(ndgCol, '.');
+	/* in the loop go to each nested DG and store the json code and DG column name in arrays */
+	if cnt > 1 then do;
+		do idx=2 to cnt;
+			dgName= scan(ndgCol, idx, '.');
+			dgNameList[idx-1]= dgName;
+			dgJsonList[idx-1]= dataGrid_toString(ndg);
+			/* create datagrid from json for the next level */
+			dataGrid_create(ndg, dataGrid_getString(ndg, dgName, 1));
+		end;
+	end;
+	
+	/***** count columns in datagrid *****/
+	dgReturn= dataGrid_columnCount(ndg);
+	
+	if cnt > 1 then do;
+		do idx=cnt-1 to 1 by -1;
+			buffer= dataGrid_toString(ndg);
+			dataGrid_create(ndg, dgJsonList[idx]);
+			dataGrid_setString(ndg, dgNameList[idx], 1, buffer);		
+		end;
+	end;
+
+	/* move modified nested dg back to host datagrid */
+	dataGrid_setString(dgHost, topDgName, 1, dataGrid_toString(ndg));
+
+	return dgReturn;
+end;

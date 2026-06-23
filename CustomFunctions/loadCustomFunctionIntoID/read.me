@@ -1,0 +1,51 @@
+#########################################################################
+#load/update custom function into SAS Intelligen Decisioning
+#The script will load a new custom function into ID. 
+#If the function already exists it will update the funcion.
+#If the category does not exist it will be created.
+#
+#The custom function will be passed into the script via a file
+#The file has three sections:
+#category:
+#<name of the ID categroy for the function>
+#description:
+#<function description>
+#code:
+#function ds2 code
+#########################################################################
+
+*** Install loadIDCustomFunction ***
+Move files to directory (e.g. /etc/sas/pycode):
+	loadIDCustomFunction.py
+	loadCustomFunction.py
+	saslog.py
+
+Add directory to PATH (optional)
+
+Make sure the directory has correct access rights
+
+Open file loadIDCustomFunction.py
+	Line 1: Adjust to point to the Python executable
+	Line 24: Adjust to point to the directory where loadCustomFunction.py is located
+	Save and close file
+
+Open file loadCustomFunction.py
+	Line 6: Adjust to point to the directory where saslog.py is located
+	Save and close file
+
+Make loadIDCustomFunction.py executable 
+	chmod 755 loadIDCustomFunction.py
+
+
+	
+*** Run loadIDCustomFunction ***
+loadIDCustomFunction.py
+  -h, --help               Shows help message
+  --file FILE, -f FILE     Specifies the file containing custom function information.
+  --logLevel, -ll          Specifies the log level between 0 (default) and 5. The higher the level the more information is written to the log.
+  --logOut, -lo            Controls where to write the log information. If set it writes log information to the logfile and to the comand line.
+
+
+
+
+	
