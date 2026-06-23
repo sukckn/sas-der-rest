@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scr-churn-agent
+  namespace: agentic-ai
+  labels:
+    app-owner: viyademo01
+    app.kubernetes.io/name: scr-churn-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app-owner: viyademo01
+      app.kubernetes.io/name: scr-churn-agent
+  template:
+    metadata:
+      labels:
+        app-owner: viyademo01
+        app.kubernetes.io/name: scr-churn-agent
+    spec:
+      containers:
+      - name: scr-churn-agent
+        image: decisioning.azurecr.io/churn-agent:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        volumeMounts:
+        - name: scr-db-secrets
+          mountPath: /opt/scr/secrets/db
+        env:
+        - name: "SAS_SCR_LOG_LEVEL_App.tk.MAS"
+          value: "Info"
+        - name: "SAS_SCR_HOST"
+          value: "agentic-ai.svc.cluster.local"
+        - name: "SAS_SCR_REDIS"
+          value: "host= redis-stack.agentic-ai.svc.cluster.local;port= 6379;db= 0"
+          
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          runAsUser: 1001
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+      restartPolicy: Always
+      securityContext: {}
+      imagePullSecrets:
+      - name: scr-agent-registry-pull-secret
+      volumes:
+      - name: scr-db-secrets
+        secret:
+          secretName: scr-agent-db.secrets
+          items:
+          - key: db.secrets
+            path: db.secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scr-churn-agent
+  namespace: agentic-ai
+  labels:
+    app-owner: viyademo01
+    app.kubernetes.io/name: scr-churn-agent
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+  selector:
+    app-owner: viyademo01
+    app.kubernetes.io/name: scr-churn-agent
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scr-churn-agent
+  namespace: agentic-ai
+  labels:
+    app-owner: viyademo01
+    app.kubernetes.io/name: scr-churn-agent
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ck05-sukckn.net.sas.com
+    secretName: net-sas-com-app-certs
+  rules:
+  - host: ck05-sukckn.net.sas.com
+    http:
+      paths:
+      - path: /churn-agent
+        pathType: Prefix
+        backend:
+          service:
+            name: scr-churn-agent
+            port:
+              number: 80
