@@ -1,0 +1,183 @@
+ds2_options sas;
+package globalVarPy /OVERWRITE=YES;
+	dcl package pymas py;
+	dcl double pystop revision;
+	dcl package logger logr('App.tk.MAS');
+	dcl nvarchar(10485760) pypgm;
+	dcl int sourceLoaded;
+/****************************************************************************************************/
+/* Method to load the Python code                                                                   */
+/****************************************************************************************************/
+	method loadSource() returns double;
+		dcl double rc;
+
+		pystop= 0;
+		if null(py) and pystop ^= 1 then do;
+			py = _new_ pymas();
+			rc = py.appendSrcLine('vars={}');
+
+			rc = py.appendSrcLine('def setVar(var, value):');
+			rc = py.appendSrcLine('    ''Output:''');
+			rc = py.appendSrcLine('    vars[var]= value');
+
+			rc = py.appendSrcLine('def getVar(var):');
+			rc = py.appendSrcLine('    ''Output: value''');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        return vars[var]');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        return None');
+
+			rc = py.appendSrcLine('def resetVars():');
+			rc = py.appendSrcLine('    ''Output:''');
+			rc = py.appendSrcLine('    vars.clear()');
+
+			pypgm = py.getSource();
+			revision = py.publish(pypgm, 'thedqcode');
+			if revision < 1 then do;
+				pystop = 1;
+				logr.log( 'e', 'publish revision=$s', revision );
+				return pystop;
+			end;
+			sourceLoaded= 1;
+		end;
+		return pystop;
+	end;
+
+/****************************************************************************************************/
+/*setVarChar - set global string variable                                                           */
+/****************************************************************************************************/
+	method setVarChar(varchar(50) var, varchar(2000) value);
+		dcl int rc;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc= py.useMethod('setVar');
+		if rc then do;
+			pystop= 1;
+			logr.log( 'e', 'useMethod setVar: rc=$s', rc );
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('var', var);
+			rc = py.setString('value', value);
+
+			rc = py.execute();
+			logr.log( 'd', 'setVar rc=$s', rc);
+		end;
+	end;
+
+/****************************************************************************************************/
+/*setVarNum - set global numeric variable                                                           */
+/****************************************************************************************************/
+	method setVarNum(varchar(50) var, double value);
+		dcl int rc;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc= py.useMethod('setVar');
+		if rc then do;
+			pystop= 1;
+			logr.log( 'e', 'useMethod setVar: rc=$s', rc );
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('var', var);
+			rc = py.setDouble('value', value);
+
+			rc = py.execute();
+			logr.log( 'd', 'setVar rc=$s', rc);
+		end;
+	end;
+
+/****************************************************************************************************/
+/*getVarChar - get global string variable                                                           */
+/****************************************************************************************************/
+	method getVarChar(varchar(50) var) returns varchar;
+		dcl int rc;
+		dcl varchar(2000) value;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc= py.useMethod('getVar');
+		if rc then do;
+			pystop= 1;
+			logr.log( 'e', 'useMethod getVar: rc=$s', rc );
+			return '';
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('var', var);
+
+			rc = py.execute();
+			logr.log( 'd', 'getVar rc=$s', rc);
+
+			value= py.getString('value');
+		end;
+		return value;
+	end;
+
+/****************************************************************************************************/
+/*getVarNum - get global numeric variable                                                           */
+/****************************************************************************************************/
+	method getVarNum(varchar(50) var) returns double;
+		dcl int rc;
+		dcl double value;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc= py.useMethod('getVar');
+		if rc then do;
+			pystop= 1;
+			logr.log( 'e', 'useMethod getVar: rc=$s', rc );
+			return 0;
+		end;
+
+		if pystop ^= 1 then do;
+			rc= py.setString('var', var);
+
+			rc= py.execute();
+			logr.log( 'd', 'getVar rc=$s', rc);
+
+			value= py.getDouble('value');
+		end;
+		return value;
+	end;
+/****************************************************************************************************/
+/*getVarCharP - get global string variable                                                           */
+/****************************************************************************************************/
+	method getVarCharP(varchar(50) var, in_out varchar value);
+		value= 	getVarChar(var);	
+	end;
+/****************************************************************************************************/
+/*getVarNumP - get global string variable                                                           */
+/****************************************************************************************************/
+	method getVarNumP(varchar(50) var, in_out double value);
+		value= 	getVarNum(var);	
+	end;
+/****************************************************************************************************/
+/*resetVars - reset all variables                                                                   */
+/****************************************************************************************************/
+	method resetVars();
+		dcl int rc;
+		dcl double value;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc= py.useMethod('resetVars');
+		if rc then do;
+			pystop= 1;
+			logr.log( 'e', 'useMethod resetVars: rc=$s', rc );
+		end;
+
+		if pystop ^= 1 then do;
+			rc= py.execute();
+			logr.log( 'd', 'resetVar rc=$s', rc);
+		end;
+	end;
+endpackage;
+

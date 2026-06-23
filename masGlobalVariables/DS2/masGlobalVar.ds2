@@ -1,0 +1,30 @@
+ds2_options sas;
+package masgvl /OVERWRITE=YES;
+    dcl int rc;
+    dcl varchar(50) varName varValue;
+    dcl package hash h([varName], [varValue], 8);
+
+/****************************************************************************************************/
+/*setVar - set global variable                                                                      */
+/****************************************************************************************************/
+	method setVar(varchar(50) name, varchar(2000) value);
+      varName= lowcase(strip(name));
+      varValue= value;
+      if (h.check([varName]) = 0) then
+        h.remove([varName]);
+      h.add([varName], [varValue]);
+	end;
+
+/****************************************************************************************************/
+/*getVar - get global variable                                                                      */
+/****************************************************************************************************/
+    method getVar(varchar(50) name, in_out varchar value);
+      varName= lowcase(strip(name));
+      varValue= '';
+	  if (h.find([varName],[varValue]) <> 0) then
+        value= .;
+      else
+        value= varValue;
+	end;
+endpackage;
+

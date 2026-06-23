@@ -1,0 +1,46 @@
+/***************************************
+*use only return parameter type: varchar or double
+*In allocParms() package name has to be lower case
+****************************************/
+
+ds2_options sas;
+package masGlobalVar / OVERWRITE=YES;
+	dcl package mascall gbVars();
+
+/****************************************************************************************************/
+/*setVar - set global variable                                                                      */
+/****************************************************************************************************/
+	method setVar(varchar(50) var, varchar(2000) value);
+		gbVars.allocParms('masgvl', 'setVar');
+
+		gbVars.setString(0, var);
+		gbVars.setString(1, value);
+		
+		gbVars.callModule();
+			
+		gbVars.releaseParms(); 
+
+	end;
+/****************************************************************************************************/
+/*getVar - get global variable                                                                      */
+/****************************************************************************************************/
+	method getVar(varchar(50) var) returns varchar;
+		dcl varchar(2000) value;
+
+		gbVars.allocParms('masgvl', 'getVar');
+		
+		gbVars.setString(0, var);
+		
+		gbVars.callModule();
+		
+		value= gbVars.getString(1);
+			
+		gbVars.releaseParms(); 
+
+		return value;
+	end;
+/****************************************************************************************************/
+	method getVarP(varchar(50) var, in_out varchar value);
+		value= getVar(var);
+	end;
+endpackage;

@@ -1,0 +1,68 @@
+ds2_options sas;
+package globalVar / OVERWRITE=YES;
+	dcl package mascall gbVars();
+
+/****************************************************************************************************/
+	method setVarChar(varchar(50) var, varchar(2000) value);
+		gbVars.allocParms('globalvarpy', 'setVarChar');
+		
+		gbVars.setString(0, var);
+		gbVars.setString(1, value);
+		
+		gbVars.callModule();
+			
+		gbVars.releaseParms(); 
+	end;
+/****************************************************************************************************/
+	method setVarNum(varchar(50) var, double value);
+		gbVars.allocParms('globalvarpy', 'setVarNum');
+		
+		gbVars.setString(0, var);
+		gbVars.setDouble(1, value);
+		
+		gbVars.callModule();
+			
+		gbVars.releaseParms(); 
+	end;
+/****************************************************************************************************/
+	method getVarChar(varchar(50) var) returns varchar;
+		dcl varchar(2000) value;
+
+		gbVars.allocParms('globalvarpy', 'getVarCharP');
+		
+		gbVars.setString(0, var);
+		
+		gbVars.callModule();
+		
+		value= gbVars.getString(1);
+			
+		gbVars.releaseParms(); 
+
+		return value;
+	end;
+/****************************************************************************************************/
+	method getVarCharP(varchar(50) var, in_out varchar value);
+		value= getVarChar(var);
+	end;
+/****************************************************************************************************/
+	method getVarNum(varchar(50) var) returns double;
+		dcl double value;
+
+		gbVars.allocParms('globalvarpy', 'getVarNumP');
+		
+		gbVars.setString(0, var);
+		
+		gbVars.callModule();
+		
+		value= gbVars.getDouble(1);
+			
+		gbVars.releaseParms(); 
+
+		return value;
+	end;
+/****************************************************************************************************/
+	method getVarNumP(varchar(50) var, in_out double value);
+		value= getVarNum(var);	
+	end;
+
+endpackage;
