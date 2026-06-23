@@ -1,0 +1,21 @@
+2019-10-31T13:47:33,655 [00000007] ERROR App.tk.D2PKG.JSON - d2jsnGetNextToken encountered a failure in JSNParse.
+2019-10-31T13:47:33,655 [00000007] ERROR App.tk.D2PKG.JSON - Encountered an illegal character.
+2019-10-31T13:47:33,655 [00000007] ERROR App.tk.D2PKG.JSON - JSON Parser located at column 0 of line 1 within the text.
+2019-10-31T13:47:33,655 [00000007] ERROR App.TableServices.DS2.Runtime.Log - Error reported by DS2 package d2json:
+2019-10-31T13:47:33,655 [00000007] ERROR App.TableServices.DS2.Runtime.Log - Encountered an illegal character.
+2019-10-31T13:47:33,655 [00000007] ERROR App.SASMAS - Invalid text. decodeJSON expected a left bracket to start, but found token type  at line 1, column 0 of the text.
+2019-10-31T13:47:33,655 [00000007] ERROR App.SASMAS - decodeJSON encountered an error.
+2019-10-31T13:47:33,655 [00000007] ERROR App.tk.D2PKG.JSON - d2jsnGetNextToken encountered a failure in JSNParse.
+2019-10-31T13:47:33,655 [00000007] ERROR App.tk.D2PKG.JSON - Encountered an illegal character.
+2019-10-31T13:47:33,655 [00000007] ERROR App.tk.D2PKG.JSON - JSON Parser located at column 0 of line 1 within the text.
+2019-10-31T13:47:33,655 [00000007] ERROR App.TableServices.DS2.Runtime.Log - Error reported by DS2 package d2json:
+2019-10-31T13:47:33,655 [00000007] ERROR App.TableServices.DS2.Runtime.Log - Encountered an illegal character.
+2019-10-31T13:47:33,655 [00000007] ERROR App.SASMAS - Invalid text. decodeJSON expected a left bracket to start, but found token type  at line 1, column 0 of the text.
+2019-10-31T13:47:33,655 [00000007] ERROR App.SASMAS - decodeJSON encountered an error.
+2019-10-31T13:47:33,656 [00000007] ERROR App.tk.D2PKG.JSON - d2jsnGetNextToken encountered a failure in JSNParse.
+2019-10-31T13:47:33,656 [00000007] ERROR App.tk.D2PKG.JSON - Encountered an illegal character.
+2019-10-31T13:47:33,656 [00000007] ERROR App.tk.D2PKG.JSON - JSON Parser located at column 0 of line 1 within the text.
+2019-10-31T13:47:33,656 [00000007] ERROR App.TableServices.DS2.Runtime.Log - Error reported by DS2 package d2json:
+2019-10-31T13:47:33,656 [00000007] ERROR App.TableServices.DS2.Runtime.Log - Encountered an illegal character.
+2019-10-31T13:47:33,656 [00000007] ERROR App.SASMAS - Invalid text. decodeJSON expected a left bracket to start, but found token type  at line 1, column 0 of the text.
+2019-10-31T13:47:33,656 [00000007] ERROR App.SASMAS - decodeJSON encountered an error.

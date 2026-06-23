@@ -1,0 +1,451 @@
+ds2_options sas;
+package masLogFiles /OVERWRITE=YES;
+	dcl package pymas py;
+	dcl double pystop;
+	dcl package logger logr('App.tk.MAS');
+	dcl nvarchar(10485760) pypgm;
+	dcl int sourceLoaded;
+/****************************************************************************************************/
+/* Method to load the Python code                                                                   */
+/****************************************************************************************************/
+	method loadSource() returns double;
+		dcl double rc;
+
+		pystop= 0;
+		if null(py) and pystop ^= 1 then do;
+			py = _new_ pymas();
+
+			rc = py.appendSrcLine('import json');
+			rc = py.appendSrcLine('import glob');
+			rc = py.appendSrcLine('from datetime import date');
+			rc = py.appendSrcLine('def readMASLogFile(MasLogFileName, curentOnly="N"):');
+			rc = py.appendSrcLine('    ''Output: logFileContent''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    defaultLogFileDir= ''/opt/sas/viya/config/var/log/microanalyticservice/default''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    #set if we only want to write log output from today');
+			rc = py.appendSrcLine('    writeLine= True');
+			rc = py.appendSrcLine('    if curentOnly == "Y":');
+			rc = py.appendSrcLine('        writeLine= False');
+			rc = py.appendSrcLine('        ');
+			rc = py.appendSrcLine('    #get current date');
+			rc = py.appendSrcLine('    currDate= date.today().strftime("%Y-%m-%d")');
+			rc = py.appendSrcLine('    #get current log MAS log file');
+			rc = py.appendSrcLine('    logDirLst= glob.glob(defaultLogFileDir + ''/*'')');
+			rc = py.appendSrcLine('    masLogDir= {}');
+			rc = py.appendSrcLine('    for f in logDirLst:');
+			rc = py.appendSrcLine('        if f[len(defaultLogFileDir)+1 : len(defaultLogFileDir)+1 + len(MasLogFileName)] == MasLogFileName:');
+			rc = py.appendSrcLine('            masLogDir[f[len(defaultLogFileDir)+1 + len(MasLogFileName):len(f)-4]]= f');
+			rc = py.appendSrcLine('    logFileName= masLogDir[sorted(masLogDir.keys())[-1]]');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    logFileLst= []');
+			rc = py.appendSrcLine('    with open(logFileName, ''r'', encoding=''utf-8-sig'') as logFile:');
+			rc = py.appendSrcLine('        for line in logFile:');
+			rc = py.appendSrcLine('            if writeLine == False and line[0:10] == currDate:');
+			rc = py.appendSrcLine('                writeLine= True');
+			rc = py.appendSrcLine('            if writeLine: ');
+			rc = py.appendSrcLine('                logFileLst.append(line)');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    logFileContent= json.dumps(logFileLst)');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    return logFileContent');
+
+			rc = py.appendSrcLine('def clearMASLogFile(MasLogFileName= ''''):');
+			rc = py.appendSrcLine('    ''Output: msg''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    msg= ''''');
+			rc = py.appendSrcLine('    defaultLogFileDir= ''/opt/sas/viya/config/var/log/microanalyticservice/default''');
+			rc = py.appendSrcLine('    ');
+			rc = py.appendSrcLine('    #get current log MAS log file');
+			rc = py.appendSrcLine('    logDirLst= glob.glob(defaultLogFileDir + ''/*'')');
+			rc = py.appendSrcLine('    masLogDir= {}');
+			rc = py.appendSrcLine('    for f in logDirLst:');
+			rc = py.appendSrcLine('        if f[len(defaultLogFileDir)+1 : len(defaultLogFileDir)+1 + len(MasLogFileName)] == MasLogFileName:');
+			rc = py.appendSrcLine('            masLogDir[f[len(defaultLogFileDir)+1 + len(MasLogFileName):len(f)-4]]= f');
+			rc = py.appendSrcLine('    logFileName= masLogDir[sorted(masLogDir.keys())[-1]]');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        logFile= open(logFileName, ''w'')');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        msg= ''File not found: '' + logFileName');
+			rc = py.appendSrcLine('        return msg');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    logFile.close()');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    msg= ''Cleared Log File: '' + logFileName');
+			rc = py.appendSrcLine('    ');
+			rc = py.appendSrcLine('    return msg');
+
+			rc = py.appendSrcLine('def readMASQKBLogFile(LogFileDir= ''''):');
+			rc = py.appendSrcLine('    ''Output: logFileContent''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    if LogFileDir == None:');
+			rc = py.appendSrcLine('        defaultLogFileDir= ''/opt/sas/viya/config/var/log/microanalyticservice/default''');
+			rc = py.appendSrcLine('    elif len(LogFileDir) == 0:');
+			rc = py.appendSrcLine('        defaultLogFileDir= ''/opt/sas/viya/config/var/log/microanalyticservice/default''');
+			rc = py.appendSrcLine('    else:');
+			rc = py.appendSrcLine('        defaultLogFileDir= LogFileDir');
+			rc = py.appendSrcLine('    MasLogFileName= ''masqkb.log''');
+			rc = py.appendSrcLine('    ');
+			rc = py.appendSrcLine('    logFileName= defaultLogFileDir + ''/'' + MasLogFileName');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    logFileLst= []');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        with open(logFileName, ''r'', encoding=''utf-8-sig'') as logFile:');
+			rc = py.appendSrcLine('            for line in logFile:');
+			rc = py.appendSrcLine('                logFileLst.append(line)');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        logFileContent= ''File not found: '' + logFileName');
+			rc = py.appendSrcLine('        return logFileContent');
+			rc = py.appendSrcLine('        ');
+			rc = py.appendSrcLine('    logFileContent= json.dumps(logFileLst)');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    return logFileContent');
+
+			rc = py.appendSrcLine('def readMASQKBCfg():');
+			rc = py.appendSrcLine('    ''Output: casaddress, casport, casuid, caspwd, logLevel, qkb''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    masConfFileName= ''/opt/sas/viya/config/etc/sysconfig/microanalyticservice.conf''');
+			rc = py.appendSrcLine('    masQKBConfName= ''''');
+			rc = py.appendSrcLine('    masQKBConfDic= {}');
+			rc = py.appendSrcLine('    casaddress= ''''');
+			rc = py.appendSrcLine('    casport= -1');
+			rc = py.appendSrcLine('    casuid= ''''');
+			rc = py.appendSrcLine('    logLevel= -1');
+			rc = py.appendSrcLine('    qkb= ''''');
+			rc = py.appendSrcLine('    caspwd= ''''');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        with open(masConfFileName, ''r'', encoding=''utf-8-sig'') as masConfFile:');
+			rc = py.appendSrcLine('            for line in masConfFile:');
+			rc = py.appendSrcLine('                if line.strip()[0:18] == ''export MASQKB_CFG='':');
+			rc = py.appendSrcLine('                    masQKBConfName= line.strip()[18:] + ''/masqkb.cfg''');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        print(''File not found: '' + masConfFileName)');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        with open(masQKBConfName, ''r'', encoding=''utf-8-sig'') as masQKBConfFile:');
+			rc = py.appendSrcLine('            masQKBConfDic= json.loads(masQKBConfFile.read())');
+			rc = py.appendSrcLine('            casaddress= masQKBConfDic[''casaddress'']');
+			rc = py.appendSrcLine('            casport= masQKBConfDic[''casport'']');
+			rc = py.appendSrcLine('            casuid= masQKBConfDic[''casuid'']');
+			rc = py.appendSrcLine('            caspwd= ''*****''');
+			rc = py.appendSrcLine('            logLevel= masQKBConfDic[''logLevel'']');
+			rc = py.appendSrcLine('            qkb= masQKBConfDic[''qkb'']');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        casaddress= ''File not found: '' + masQKBConfName');
+			rc = py.appendSrcLine('        ');
+			rc = py.appendSrcLine('    return casaddress, casport, casuid, caspwd, logLevel, qkb');
+
+			rc = py.appendSrcLine('def setMASQKBCfg(casaddress, casport, casuid, caspwd, logLevel, qkb):');
+			rc = py.appendSrcLine('    ''Output: ''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    masConfFileName= ''/opt/sas/viya/config/etc/sysconfig/microanalyticservice.conf''');
+			rc = py.appendSrcLine('    masQKBConfName= ''''');
+			rc = py.appendSrcLine('    masQKBConfDic= {}');
+			rc = py.appendSrcLine('    masQKBConfJson= ''''');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        with open(masConfFileName, ''r'', encoding=''utf-8-sig'') as masConfFile:');
+			rc = py.appendSrcLine('            for line in masConfFile:');
+			rc = py.appendSrcLine('                if line.strip()[0:18] == ''export MASQKB_CFG='':');
+			rc = py.appendSrcLine('                    masQKBConfName= line.strip()[18:] + ''/masqkb.cfg''');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        print(''File not found: '' + masConfFileName)');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        with open(masQKBConfName, ''r'', encoding=''utf-8-sig'') as masQKBConfFile:');
+			rc = py.appendSrcLine('            masQKBConfDic= json.loads(masQKBConfFile.read())');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        casaddress= ''File not found: '' + masQKBConfName');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    if casaddress != None:');
+			rc = py.appendSrcLine('        if len(casaddress) > 0:');
+			rc = py.appendSrcLine('            masQKBConfDic[''casaddress'']= casaddress');
+			rc = py.appendSrcLine('    if casport != None:');
+			rc = py.appendSrcLine('        if casport >= 0:');
+			rc = py.appendSrcLine('            masQKBConfDic[''casport'']= casport');
+			rc = py.appendSrcLine('    if casuid != None:');
+			rc = py.appendSrcLine('        if len(casuid) > 0:');
+			rc = py.appendSrcLine('            masQKBConfDic[''casuid'']= casuid');
+			rc = py.appendSrcLine('    if caspwd != None:');
+			rc = py.appendSrcLine('        if len(caspwd) > 0:');
+			rc = py.appendSrcLine('            masQKBConfDic[''caspwd'']= caspwd');
+			rc = py.appendSrcLine('    if logLevel != None:');
+			rc = py.appendSrcLine('        if logLevel >= 0:');
+			rc = py.appendSrcLine('            masQKBConfDic[''logLevel'']= logLevel');
+			rc = py.appendSrcLine('    if qkb != None:');
+			rc = py.appendSrcLine('        if len(qkb) > 0:');
+			rc = py.appendSrcLine('            masQKBConfDic[''qkb'']= qkb');
+			rc = py.appendSrcLine('    masQKBConfJson= json.dumps(masQKBConfDic)');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    masConfFile= open(masQKBConfName, ''w'')');
+			rc = py.appendSrcLine('    masConfFile.write(masQKBConfJson)');
+			rc = py.appendSrcLine('    masConfFile.close()');
+			rc = py.appendSrcLine('    return');
+
+			rc = py.appendSrcLine('def clearMASQKBLog(LogFileDir= ''''):');
+			rc = py.appendSrcLine('    ''Output: msg''');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    msg= ''''');
+			rc = py.appendSrcLine('    if LogFileDir == None:');
+			rc = py.appendSrcLine('        defaultLogFileDir= ''/opt/sas/viya/config/var/log/microanalyticservice/default''');
+			rc = py.appendSrcLine('    elif len(LogFileDir) == 0:');
+			rc = py.appendSrcLine('        defaultLogFileDir= ''/opt/sas/viya/config/var/log/microanalyticservice/default''');
+			rc = py.appendSrcLine('    else:');
+			rc = py.appendSrcLine('        defaultLogFileDir= LogFileDir');
+			rc = py.appendSrcLine('    MasLogFileName= ''masqkb.log''');
+			rc = py.appendSrcLine('    ');
+			rc = py.appendSrcLine('    logFileName= defaultLogFileDir + ''/'' + MasLogFileName');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    try:');
+			rc = py.appendSrcLine('        logFile= open(logFileName, ''w'')');
+			rc = py.appendSrcLine('    except:');
+			rc = py.appendSrcLine('        msg= ''File not found: '' + logFileName');
+			rc = py.appendSrcLine('        return msg');
+			rc = py.appendSrcLine('');
+			rc = py.appendSrcLine('    logFile.close()');
+			rc = py.appendSrcLine('    msg= ''Cleared Log File: '' + logFileName');
+			rc = py.appendSrcLine('    ');
+			rc = py.appendSrcLine('    return msg');
+
+			pypgm = py.getSource();
+			revision = py.publish(pypgm, 'thelfcode');
+			if revision < 1 then do;
+				pystop = 1;
+				logr.log( 'e', 'publish revision=$s', revision );
+				return pystop;
+			end;
+			sourceLoaded= 1;
+		end;
+		return pystop;
+	end;
+
+/****************************************************************************************************/
+/*readMASLogFile                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method readMASLogFile(varchar(30) logFileName, varchar(1) todayOnly, in_out varchar logFileContent);
+		dcl int rc;
+		dcl varchar(30) MasLogFileName;
+		dcl varchar(1) curentOnly;
+
+		logFileContent= '';
+
+		MasLogFileName= 'sas-microanalyticservice-core_';
+		if logFileName = 'core' then
+			MasLogFileName= 'sas-microanalyticservice-core_';	
+		if logFileName = '1' then
+			MasLogFileName= 'sas-microanalyticservice-core_';
+		if logFileName = '2' then
+			MasLogFileName= 'sas-microanalyticservice_';
+
+		curentOnly= 'N';
+		if todayOnly = 'Y' then
+			curentOnly= 'Y';
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc = py.useMethod('readMASLogFile');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod readMASLogFile: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('MasLogFileName', MasLogFileName);
+			rc = py.setString('curentOnly', curentOnly);
+			rc = py.execute();
+			logr.log( 'd', 'readMASLogFile rc=$s', rc );
+
+			logFileContent= py.getString('logFileContent');
+		end;
+	end;
+/****************************************************************************************************/
+/*clearMASLogFile                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method clearMASLogFile(varchar(30) logFileName, in_out varchar msg);
+		dcl int rc;
+		dcl varchar(30) MasLogFileName;
+
+		msg= '';
+
+		MasLogFileName= 'sas-microanalyticservice-core_';
+		if logFileName = 'core' then
+			MasLogFileName= 'sas-microanalyticservice-core_';	
+		if logFileName = '1' then
+			MasLogFileName= 'sas-microanalyticservice-core_';
+		if logFileName = '2' then
+			MasLogFileName= 'sas-microanalyticservice_';
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc = py.useMethod('clearMASLogFile');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod clearMASLogFile: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('MasLogFileName', MasLogFileName);
+			rc = py.execute();
+			logr.log( 'd', 'clearMASLogFile rc=$s', rc );
+
+			msg= py.getString('msg');
+		end;
+	end;
+/****************************************************************************************************/
+/*readMASQKBLogFile                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method readMASQKBLogFile(varchar(200) logFileDir, in_out varchar logFileContent);
+		dcl int rc;
+
+		logFileContent= '';
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		if lengthc(logFileDir) = 0 then
+			logFileDir= '/opt/sas/viya/config/var/log/microanalyticservice/default';
+
+		rc = py.useMethod('readMASQKBLogFile');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod readMASQKBLogFile: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('logFileDir', logFileDir);
+			rc = py.execute();
+			logr.log( 'd', 'readMASQKBLogFile rc=$s', rc );
+
+			logFileContent= py.getString('logFileContent');
+		end;
+	end;
+/****************************************************************************************************/
+/*clearMASQKBLog                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method clearMASQKBLog(varchar(200) logFileDir, in_out varchar msg);
+		dcl int rc;
+
+		msg= '';
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		if lengthc(logFileDir) = 0 then
+			logFileDir= '/opt/sas/viya/config/var/log/microanalyticservice/default';
+
+		rc = py.useMethod('clearMASQKBLog');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod clearMASQKBLog: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('logFileDir', logFileDir);
+			rc = py.execute();
+			logr.log( 'd', 'clearMASQKBLog rc=$s', rc );
+
+			msg= py.getString('msg');
+		end;
+	end;
+/****************************************************************************************************/
+/*readMASQKBCfg                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method readMASQKBCfg(in_out varchar casaddress, in_out integer casport, in_out varchar casuid, in_out varchar caspwd, in_out integer logLevel, in_out varchar qkb);
+		dcl int rc;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc = py.useMethod('readMASQKBCfg');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod readMASQKBCfg: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.execute();
+			logr.log( 'd', 'readMASQKBCfg rc=$s', rc );
+
+			casaddress= py.getString('casaddress');
+			casport= py.getInt('casport');
+			casuid= py.getString('casuid');
+			caspwd= py.getString('caspwd');
+			logLevel= py.getInt('logLevel');
+			qkb= py.getString('qkb');
+
+		end;
+	end;
+/****************************************************************************************************/
+/*setMASQKBCfg                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method setMASQKBCfg(varchar(20) casaddress, integer casport, varchar(25) casuid, varchar(50) caspwd, integer logLevel, varchar(100) qkb, in_out varchar msg);
+		dcl int rc;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc = py.useMethod('setMASQKBCfg');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod setMASQKBCfg: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('casaddress', casaddress);
+			rc = py.setInt('casport', casport);
+			rc = py.setString('casuid', casuid);
+			rc = py.setString('caspwd', caspwd);
+			rc = py.setInt('logLevel', logLevel);
+			rc = py.setString('qkb', qkb);
+
+			rc = py.execute();
+			logr.log( 'd', 'setMASQKBCfg rc=$s', rc );
+			msg= 'MAS QKB configuration has changed.';
+		end;
+	end;
+/****************************************************************************************************/
+/*setMASQKBLogLevel                                            */
+/*call function in the python code and return value         */
+/****************************************************************************************************/
+	method setMASQKBLogLevel(integer logLevel, in_out varchar msg);
+		dcl int rc;
+
+		if missing(sourceLoaded) then
+			loadSource();
+
+		rc = py.useMethod('setMASQKBCfg');
+		if rc then do;
+			pystop = 1;
+			logr.log( 'e', 'useMethod setMASQKBLogLevel: rc=$s', rc );
+			return;
+		end;
+
+		if pystop ^= 1 then do;
+			rc = py.setString('casaddress', '');
+			rc = py.setInt('casport', -1);
+			rc = py.setString('casuid', '');
+			rc = py.setString('caspwd', '');
+			rc = py.setInt('logLevel', logLevel);
+			rc = py.setString('qkb', '');
+
+			rc = py.execute();
+			logr.log( 'd', 'setMASQKBLogLevel rc=$s', rc );
+			msg= 'MAS QKB LogLevel has changed.';
+		end;
+	end;
+
+endpackage;
